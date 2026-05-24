@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java -version)",
+      "Bash(mvn -version)",
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "PowerShell(Get-Command *)",
+      "Bash(curl -sS -m 30 -o .mvn/wrapper/maven-wrapper.jar --create-dirs https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-wrapper/3.3.2/maven-wrapper-3.3.2.jar)",
+      "Bash(curl -sS -m 30 -o mvnw https://raw.githubusercontent.com/apache/maven-wrapper/maven-wrapper-3.3.2/maven-wrapper-distribution/src/resources/mvnw)",
+      "Bash(curl -sS -m 30 -o mvnw.cmd https://raw.githubusercontent.com/apache/maven-wrapper/maven-wrapper-3.3.2/maven-wrapper-distribution/src/resources/mvnw.cmd)",
+      "PowerShell(Write-Output \"JAVA_HOME=$env:JAVA_HOME\"; Get-Content \".\\\\mvnw.cmd\" | Select-String -Pattern \"JAVA_HOME|where java|%JAVACMD%|@@\" | Select-Object -First 12)",
+      "PowerShell(.\\\\mvnw.cmd -B -ntp -DskipTests test-compile 2>&1 | Select-Object -Last 60)",
+      "PowerShell(docker --version; docker compose version; Write-Output \"--- daemon ---\"; docker info --format '{{.ServerVersion}} / {{.OperatingSystem}}')",
+      "PowerShell(docker version *)",
+      "PowerShell(docker compose *)",
+      "PowerShell(docker exec securebank-db *)"
+    ]
+  }
+}

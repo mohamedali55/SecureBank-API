@@ -1,0 +1,121 @@
+spring:
+  application:
+    name: securebank-api
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/securebank}
+    username: ${SPRING_DATASOURCE_USERNAME:securebank}
+    password: ${SPRING_DATASOURCE_PASSWORD:securebank}
+    hikari:
+      pool-name: securebank-pool
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:10}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: 10000      # max wait (ms) for a connection from the pool
+      validation-timeout: 5000
+      idle-timeout: 600000           # 10 min
+      keepalive-time: 300000         # 5 min
+      max-lifetime: 1800000          # 30 min (< DB/proxy idle cutoffs)
+      leak-detection-threshold: 30000
+
+  jpa:
+    # Flyway owns the schema; Hibernate only validates that entities match it.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+      # Backstop: no JPA query may run longer than 15s.
+      jakarta:
+        persistence:
+          query:
+            timeout: 15000
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Redis is used for distributed rate-limit buckets. Lazy connection: the app starts even if
+  # Redis is down, and the limiter fails open.
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2s              # command timeout
+      connect-timeout: 2s
+      lettuce:
+        shutdown-timeout: 200ms
+
+  # Let in-flight requests finish on SIGTERM before the context closes.
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  mvc:
+    async:
+      request-timeout: 20s
+
+# ---- Application security settings ----
+security:
+  jwt:
+    # 256-bit minimum secret for HS256. OVERRIDE THIS IN PRODUCTION via SECURITY_JWT_SECRET.
+    secret: ${SECURITY_JWT_SECRET:change-me-in-prod-this-is-a-development-only-secret-key-0123456789}
+    # Token lifetime in milliseconds (default 1 hour).
+    expiration-ms: ${SECURITY_JWT_EXPIRATION_MS:3600000}
+    issuer: securebank-api
+  # Per-client-IP token bucket on /api/auth/** to blunt brute-force / credential stuffing.
+  # backend: "memory" (single instance) or "redis" (shared across replicas).
+  rate-limit:
+    enabled: ${SECURITY_RATE_LIMIT_ENABLED:true}
+    backend: ${SECURITY_RATE_LIMIT_BACKEND:memory}
+    capacity: ${SECURITY_RATE_LIMIT_CAPACITY:10}
+    refill-tokens: ${SECURITY_RATE_LIMIT_REFILL_TOKENS:10}
+    refill-period-seconds: ${SECURITY_RATE_LIMIT_REFILL_PERIOD_SECONDS:60}
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: always
+    include-binding-errors: always
+  tomcat:
+    connection-timeout: 5s
+    keep-alive-timeout: 15s
+    threads:
+      max: ${SERVER_TOMCAT_MAX_THREADS:200}
+      min-spare: 10
+    accept-count: 100
+    max-connections: 8192
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+  health:
+    # Only ping Redis when it's actually the active rate-limit backend.
+    redis:
+      enabled: ${MANAGEMENT_HEALTH_REDIS_ENABLED:false}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.securebank: INFO
+    org.springframework.security: INFO
+    org.flywaydb: INFO

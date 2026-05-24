@@ -1,0 +1,29 @@
+# Fast, dependency-free profile: in-memory H2 in PostgreSQL-compatibility mode.
+# Lets the atomicity test run on any machine with just a JDK (no Docker).
+spring:
+  datasource:
+    # LOCK_TIMEOUT raised so heavy SELECT ... FOR UPDATE contention in the stress test waits
+    # rather than erroring out, mirroring PostgreSQL's default behaviour.
+    url: jdbc:h2:mem:securebank;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=30000
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+
+security:
+  jwt:
+    secret: test-secret-key-test-secret-key-test-secret-key-0123456789
+    expiration-ms: 3600000
+    issuer: securebank-api-test
+  rate-limit:
+    # Disabled by default in tests so it doesn't interfere; the rate-limit test re-enables it.
+    enabled: false
