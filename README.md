@@ -1,5 +1,7 @@
 # SecureBank API
 
+[![CI](https://github.com/mohamedali55/SecureBank-API/actions/workflows/ci.yml/badge.svg)](https://github.com/mohamedali55/SecureBank-API/actions/workflows/ci.yml)
+
 A production-style REST banking API built with **Java 17 · Spring Boot 3 · Spring Security · PostgreSQL · JWT · Flyway · Docker**.
 
 Users register, log in, open accounts, transfer money, and read their transaction history. Every endpoint sits behind a JWT filter, every action is written to an audit trail, and **every money transfer is atomic** — money is never created, destroyed, or stranded between accounts, even if the application crashes mid-transfer.
